@@ -1,0 +1,53 @@
+{
+  "name": "steemgigs_backend",
+  "version": "1.0.0",
+  "description": "Steemgigs API Server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index",
+    "startw": "nodemon src/index.js --exec 'npm run lint && node'",
+    "startW": "nodemon src/index.js --exec 'npm run lint && npm run startRP'",
+    "startP": "pm2 start src/index.js -i max --name \"SteemGigsServer\"",
+    "startRP": "pm2 stop all && pm2 delete all && pm2 start -f src/index.js -i max --name \"SteemGigs Server\"",
+    "lint": "./node_modules/.bin/eslint **/*.js --fix",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Artists",
+    "music",
+    "nodeJS",
+    "API",
+    "express"
+  ],
+  "author": "Ajala Abdulsamii <kgasta@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^4.13.1",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^6.0.0",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "bcrypt": "^1.0.3",
+    "body-parser": "^1.18.2",
+    "cloudinary": "^1.10.0",
+    "connect-multiparty": "^2.1.0",
+    "connect-redis": "^3.3.2",
+    "cors": "^2.8.4",
+    "dotenv": "^4.0.0",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "helmet": "^3.9.0",
+    "joi": "^13.0.2",
+    "jsonwebtoken": "^8.1.0",
+    "mongoose": "^4.13.7",
+    "mongoose-multi": "0.0.18",
+    "morgan": "^1.9.0",
+    "redis": "^2.8.0",
+    "sc2-sdk": "^1.0.2",
+    "steem": "^0.7.1"
+  }
+}

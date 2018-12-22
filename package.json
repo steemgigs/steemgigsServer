@@ -12,6 +12,9 @@
     "lint": "./node_modules/.bin/eslint **/*.js --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": "8.11.1"
+  },
   "keywords": [
     "Artists",
     "music",

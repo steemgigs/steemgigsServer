@@ -1,4 +1,5 @@
-const sc2 = require('sc2-sdk')
+// const sc2 = require('sc2-sdk')
+const sc2 = require('steemconnect')
 
 const sc = sc2.Initialize({
   baseURL: 'https://v2.steemconnect.com',

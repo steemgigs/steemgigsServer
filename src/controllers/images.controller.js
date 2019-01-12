@@ -1,12 +1,10 @@
-const router = require('express').Router()
 const cloudinary = require('cloudinary')
 const fileParser = require('connect-multiparty')()
-
 const { stringify, handleErr } = require('../utils')
 
 cloudinary.config({cloud_name: 'jalasem', api_key: '977684335728887', api_secret: 'DQkLl9L0x843jwLcXXivqDiNWxc'})
 
-router.post('/imgUpload', fileParser, (req, res) => {
+exports.upload_image = (fileParser, (req, res) => {
   var imageFile = req.files.photos
   cloudinary
     .v2
@@ -26,5 +24,3 @@ router.post('/imgUpload', fileParser, (req, res) => {
       }
     })
 })
-
-module.exports = router

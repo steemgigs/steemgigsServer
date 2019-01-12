@@ -1,8 +1,7 @@
-const router = require('express').Router()
 const Feedback = require('../model/feedback')
 const {stringify} = require('../utils')
 
-router.post('/feedback', (req, res) => {
+exports.add_feedback = (req, res) => {
   let {message, rating, email, username} = req.body
   console.log('got a new feedback!!!:::=>', {message, rating, email, username})
   let newFeedback
@@ -13,6 +12,4 @@ router.post('/feedback', (req, res) => {
   }).catch((e) => {
     res.send(e)
   })
-})
-
-module.exports = router
+}

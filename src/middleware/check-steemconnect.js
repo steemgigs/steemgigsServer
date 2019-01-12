@@ -1,14 +1,19 @@
-const router = require('express').Router()
 const axios = require('axios')
-const {stringify, handleErr} = require('../utils')
+const {handleErr, stringify} = require('../utils.js')
 
-router.post('/verify', (req, res) => {
-  let {token} = req.body
+const validateSteemconnect = async (req, res, next) => {
+  let token = req.headers['token'] || req.headers['x-access-token'] || req.body.token
   if (token) {
     axios.get(`https://steemconnect.com/api/me?access_token=${token}`).then(response => {
       let responseData = response.data
-      // console.log((responseData))
-      res.send(responseData)
+      if (responseData.user === responseData._id) {
+        req.user = responseData.user
+        req.token = token
+        next()
+      } else {
+        console.log(responseData)
+        res.send('stop there!')
+      }
     }).catch(err => {
       if (err.response) {
         console.log(stringify(err.response.data))
@@ -22,8 +27,8 @@ router.post('/verify', (req, res) => {
       }
     })
   } else {
-    handleErr(null, res, 'please supply a token', 401)
+    handleErr({}, res, 'You are not authroized!', 403)
   }
-})
+}
 
-module.exports = router
+module.exports = validateSteemconnect

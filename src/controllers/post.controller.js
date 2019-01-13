@@ -3,6 +3,7 @@ const User = require('../model/user')
 const sc2 = require('../factory/sc2')
 const { handleErr, stringify, calcRep } = require('../utils')
 const steem = require('steem')
+
 // POST Create post
 
 exports.create_post = (req, res) => {
@@ -37,7 +38,9 @@ exports.create_post = (req, res) => {
             if (count > 0) {
               Post.findOneAndUpdate({ url: postURL }, { title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type }, (err, result) => {
                 if (!err) {
-                  res.send('Successfully pushed to steem!')
+                  res.send({
+                    permlink: permlink
+                  })
                 } else {
                   handleErr(err, res, 'there was an error please try again')
                 }
@@ -46,7 +49,9 @@ exports.create_post = (req, res) => {
               let newPost = new Post({ title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type, url: postURL })
               newPost.save(err => {
                 if (!err) {
-                  res.send('Successfully pushed to steem!')
+                  res.send({
+                    permlink: permlink
+                  })
                 } else {
                   res.send('please try again')
                 }

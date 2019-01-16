@@ -282,6 +282,7 @@ exports.get_profile = (req, res) => {
             } else {
               profile.steemgigsWitness = false
             }
+            profile.certifiedUloggerStatus = res.locals.certifiedUloggerStatus || false
             res.json(profile)
           } else {
             console.log('error connecting to steem to fetch complete userData', stringify(err))

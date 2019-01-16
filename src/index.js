@@ -1,83 +1,36 @@
-const cluster = require('cluster')
 const express = require('express')
+const posts = require('./routes/posts.route.js')
+const profile = require('./routes/profile.route.js')
+const search = require('./routes/search.route.js')
+const image = require('./routes/images.route.js')
+const feedback = require('./routes/feedback.route.js')
+const bodyParser = require('body-parser')
+const helmet = require('helmet')
+const logger = require('morgan')
+const cors = require('cors')
+const config = require('./config')
+const app = express()
 
-const CPUs = require('os')
-  .cpus()
-  .length
+require('dotenv').config()
 
-if (cluster.isMaster) {
-  console.log(`Master cluster setting up ${CPUs} workers...`)
+app.use(cors())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
+app.use(logger('dev'))
+app.use(helmet())
+app.disable('x-powered-by')
+app.set('tokenSecret', process.env.TOKEN_SECRET || config.token_secret)
 
-  for (var i = 0; i < CPUs; i++) {
-    cluster.fork()
-  }
-  cluster.on('online', worker => {
-    console.log(`Worker ${worker.process.pid} is online.`)
-  })
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died with code: ${code}, and signal: ${signal}`)
+// Routes
 
-    console.log('Starting a new worker')
-    cluster.fork()
-  })
-} else {
-  require('dotenv').config()
-  // const fs = require('fs')
-  // const https = require('https')
-  const http = require('http')
-  // const path = require('path')
-  const bodyParser = require('body-parser')
-  const helmet = require('helmet')
-  const logger = require('morgan')
-  const cors = require('cors')
+app.use('/posts', posts)
+app.use('/profile', profile)
+app.use('/feedback', feedback)
+app.use('/search', search)
+app.use('/images', image)
 
-  const app = express()
+// Listener
 
-  const api = require('./api/index')
-  const config = require('./config')
-
-  const PORT = process.env.PORT || config.PORT
-  // const S_PORT = process.env.S_PORT || config.S_PORT
-
-  app
-    .set('tokenSecret', process.env.TOKEN_SECRET || config.token_secret)
-    .use(logger('dev'))
-    .use(helmet())
-    .disable('x-powered-by')
-    .use(cors())
-  app.use(bodyParser.json())
-  app.use(bodyParser.urlencoded({extended: true}))
-
-  app.use('/api', api)
-  app.use('/', api)
-
-  app.get('/', (req, res) => {
-    console.log(`process pid:${process.pid} recvd a request. at '/'`)
-    res.send(`<h1>Hey!, I'm only designated to serve <a href="https://steemgigs.org">steemgigs.org</a> alone. Thanks you</h1>`)
-  })
-
-  // const secureServerOptions = {
-  //   key: fs.readFileSync(path.resolve('./src/cert/private.key')),
-  //   cert: fs.readFileSync(path.resolve('./src/cert/certificate.crt')),
-  //   ca: fs.readFileSync(path.resolve('./src/cert/ca_bundle.pem')),
-  //   requestCert: true,
-  //   rejectUnauthorized: false
-  // }
-
-  // const secureServer = https.createServer(secureServerOptions, app)
-  const server = http.createServer(app)
-
-  // secureServer.listen(S_PORT)
-  server.listen(PORT, () => {
-    console.log(`Server(${process.pid}) running on PORT:${PORT} is listening to all requests`)
-  })
-//   server.listen(PORT + 1, () => {
-//     console.log(`Server(${process.pid}) running on PORT:${PORT + 1} is listening to all requests`)
-//   })
-//   server.listen(PORT + 2, () => {
-//     console.log(`Server(${process.pid}) running on PORT:${PORT + 2} is listening to all requests`)
-//   })
-//   server.listen(PORT + 3, () => {
-//     console.log(`Server(${process.pid}) running on PORT:${PORT + 3} is listening to all requests`)
-//   })
-}
+var listener = app.listen(process.env.PORT || 5000, function () {
+  console.log('Listening on port ' + listener.address().port)
+})

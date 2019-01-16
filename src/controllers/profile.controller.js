@@ -1,13 +1,11 @@
-const router = require('express').Router()
-const sc2 = require('../factory/sc2')
+const User = require('../model/user')
 const steem = require('steem')
 const { handleErr, stringify, calcRep } = require('../utils')
-
 const SteemAccount = require('../model/steemData/Account')
-const Post = require('../model/post')
-const User = require('../model/user')
+const axios = require('axios')
 
-router.post('/loggedIn', (req, res) => {
+// POST Login
+exports.login = (req, res) => {
   let {username} = req.body
   if (req.user === username) {
     User.findOne({username}).exec((err, profile) => {
@@ -89,39 +87,6 @@ router.post('/loggedIn', (req, res) => {
               console.log({author, profile})
             }
           })
-          // SteemAccount.findOne({account: username}).exec((err, profileData) => {
-          //   if (!err) {
-          //     profileData = profileData.toObject({getters: true})
-          //     console.log(stringify(profileData))
-          //     let {profile_image: profileImage, name, about, location, website, cover_image: coverImage, facebook, github, instagram, twitter} = profileData.json_metadata.profile
-          //     let newUser = new User({
-          //       username,
-          //       name,
-          //       about,
-          //       location,
-          //       social: {
-          //         website, twitter, facebook, instagram, github
-          //       },
-          //       profilePic: profileImage,
-          //       coverPic: coverImage
-          //     })
-          //     newUser.save((err, newProfileData) => {
-          //       if (!err) {
-          //         newProfileData = newProfileData.toObject({getters: true})
-          //         console.log('newUser Rep:', profileData.rep || profileData.reputation)
-          //         newProfileData.rep = profileData.rep || profileData.reputation
-          //         newProfileData.balance = profileData.balance.amount
-          //         delete newProfileData.deleted
-          //         delete newProfileData.disabled
-          //         res.json({type: 'new user', profile: newProfileData})
-          //       }
-          //     }).catch(err => {
-          //       handleErr(err, res, 'error saving new user data')
-          //     })
-          //   } else {
-          //     handleErr(err, res, 'error fetching profile data')
-          //   }
-          // })
         }
       } else {
         console.log(stringify(err))
@@ -129,10 +94,12 @@ router.post('/loggedIn', (req, res) => {
       }
     })
   } else {
-    handleErr({error: 'unauthorized loggedIn request'}, res, 'unauthorized loggedIn request', 403)
+    handleErr({error: 'unauthorized loggedIdn request'}, res, 'unauthorized loggeddIn request', 403)
   }
-})
-router.post('/profile', (req, res) => {
+}
+
+// POST Set Profile
+exports.set_profile = (req, res) => {
   let {username} = req.body
   if (req.user === username) {
     SteemAccount.findOne({account: username}).exec((err, profileData) => {
@@ -167,111 +134,11 @@ router.post('/profile', (req, res) => {
   } else {
     handleErr({error: 'unauthorized loggedIn request'}, res, 'unauthorized loggedIn request', 403)
   }
-})
+}
 
-router.post('/post', (req, res) => {
-  try {
-    let { username, permlink, title, body, liked, upvoteRange, jsonMetadata } = req.body
-    console.log({username, permlink, title, jsonMetadata, liked, upvoteRange})
-    let token = req.token
-    sc2.setAccessToken(token)
-    sc2.comment('', 'steemgigs', username, permlink, title, body, jsonMetadata, (err, result) => {
-      if (err) {
-        console.log('err', err)
-        handleErr(err, res, 'Error pushing post to steem, you might have used the same title previous time', 500)
-      } else {
-        console.log({result})
-        if (liked) {
-          sc2.setAccessToken(token)
-          sc2.vote(username, username, permlink, parseInt(upvoteRange) * 100, (err, res) => {
-            if (!err) {
-              console.log('post liked')
-              console.log({liked})
-            }
-          })
-        }
-        let postURL = `/steemgigs/@${username}/${permlink}`
-        console.log('result(posted to steem)::', stringify(result))
-        console.log('posted!, saving to steemggis db...')
-        console.log('result url:', postURL)
-        Post.count({ url: postURL }, (err, count) => {
-          console.log('no of exsiting url', count, 'error counting:', err)
-          if (!err) {
-            if (count > 0) {
-              Post.findOneAndUpdate({ url: postURL }, { title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type }, (err, result) => {
-                if (!err) {
-                  res.send('Successfully pushed to steem!')
-                } else {
-                  handleErr(err, res, 'there was an error please try again')
-                }
-              })
-            } else {
-              let newPost = new Post({ title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type, url: postURL })
-              newPost.save(err => {
-                if (!err) {
-                  res.send('Successfully pushed to steem!')
-                } else {
-                  res.send('please try again')
-                }
-              })
-            }
-          } else {
-            handleErr(err, res, 'there was an error please try again')
-          }
-        })
-      }
-    })
-  } catch (error) {
-    handleErr(error, res, 'error posting your steemgigs')
-  }
-})
-router.post('/comment', (req, res) => {
-  try {
-    let { parentAuthor, parentPermlink, username, body } = req.body
-    let now = new Date().toISOString().replace(/-/g, '').replace(/:/g, '').replace(/\./g, '').replace(/Z/, 'z').replace(/T/, 't')
-    let permlink = `re-${parentAuthor}-${parentPermlink}-${now}`
-    sc2.setAccessToken(req.token)
-    sc2.comment(parentAuthor, parentPermlink, username, permlink, '', body, { generated: true }, (error, result) => {
-      if (error) {
-        handleErr(error, res, 'Error posting your comment, try again', 500)
-      } else {
-        steem.api.getContentReplies(parentAuthor, parentPermlink, function (err, comments) {
-          if (!err) {
-            let dataToSend = []
-            let sendIt = () => {
-              if (dataToSend.length === comments.length) {
-                res.send(dataToSend)
-              }
-            }
-            comments.forEach(comment => {
-              let {author} = comment
-              steem.api.getAccounts([author], function (err, authorArray) {
-                let author = authorArray[0]
-                if (!err) {
-                  try {
-                    comment.rep = calcRep(comment.author_reputation)
-                    comment.userImg = JSON.parse(author.json_metadata).profile.profile_image
-                  } catch (e) {
-                    console.log({e, author})
-                  }
-                  dataToSend.push(comment)
-                  sendIt()
-                }
-              })
-            })
-            sendIt()
-          } else {
-            console.log('error fetching comments')
-          }
-        })
-      }
-    })
-  } catch (error) {
-    handleErr(error, res, 'error posting your comment')
-  }
-})
+// Edit Profile
 
-router.post('/editProfile', (req, res) => {
+exports.edit_profile = (req, res) => {
   let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender} = req.body
   console.log('from frontend', {test, vacation})
   if (req.user === username) {
@@ -334,6 +201,120 @@ router.post('/editProfile', (req, res) => {
   } else {
     handleErr({error: 'unauthorized profile modification attempt'}, res, 'you can only modify your own profile details', 403)
   }
-})
+}
 
-module.exports = router
+// POST Verify User
+
+exports.verify_user = (req, res) => {
+  let {token} = req.body
+  if (token) {
+    axios.get(`https://steemconnect.com/api/me?access_token=${token}`).then(response => {
+      let responseData = response.data
+      // console.log((responseData))
+      res.send(responseData)
+    }).catch(err => {
+      if (err.response) {
+        console.log(stringify(err.response.data))
+        if (err.response.data.error) {
+          handleErr(err.response.data, res, err.response.data.error, 401)
+        } else {
+          handleErr(err.response.data, res, 'verification error', 403)
+        }
+      } else {
+        handleErr(err, res, 'verification server is unreachable')
+      }
+    })
+  } else {
+    handleErr(null, res, 'please supply a token', 401)
+  }
+}
+
+// GET User Profile
+
+exports.get_profile = (req, res) => {
+  var username = req.params.username
+  User.findOne({username}).exec((err, profile) => {
+    if (!err) {
+      if (profile) {
+        profile = profile.toObject({getters: true})
+      } else {
+        profile = {}
+      }
+      if (profile.deleted) {
+        res.json({tye: 'deleted user'})
+      } else if (profile.disabled) {
+        res.json({type: 'user disabled or banned'})
+      } else {
+        delete profile.deleted
+        delete profile.disabled
+        steem.api.getAccounts([username], function (err, authorArray) {
+          let author = authorArray[0]
+          if (!err) {
+            if (Object.keys(profile).length < 1) {
+              let apiProfile = {}
+              if (JSON.parse(author.json_metadata).profile) {
+                apiProfile = JSON.parse(author.json_metadata).profile
+              }
+              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              profile = {
+                username,
+                social: {
+                  website: website || '',
+                  facebook: facebook || '',
+                  github: github || '',
+                  discord: discord || '',
+                  twitter: twitter,
+                  instagram: instagram
+                },
+                languages: []
+              }
+              profile.name = name || ''
+              profile.profilePic = profilePic || ''
+              profile.about = about || ''
+              profile.location = location || ''
+              profile.coverPic = coverPic || ''
+              profile.name = name || ''
+            }
+            profile.balance = author.balance
+            profile.rep = calcRep(author.reputation)
+            if (author.witness_votes.indexOf('steemgigs') > -1) {
+              profile.steemgigsWitness = true
+            } else {
+              profile.steemgigsWitness = false
+            }
+            profile.certifiedUloggerStatus = res.locals.certifiedUloggerStatus || false
+            res.json(profile)
+          } else {
+            console.log('error connecting to steem to fetch complete userData', stringify(err))
+            res.json(profile)
+          }
+        })
+      }
+    }
+  })
+}
+
+// GET User Image
+
+exports.get_user_image = (req, res) => {
+  let {username} = req.params
+  SteemAccount.findOne({'name': username}).exec((err, result) => {
+    result = result.toObject({getters: true})
+    if (!err) {
+      let info = {}
+      info.profileImage = result.json_metadata.profile.profile_image || 'https://via.placeholder.com/100x100'
+      info.rep = result.rep
+      res.send(info)
+    } else {
+      handleErr(err, res, 'user doesnt exit')
+    }
+  })
+}
+
+// GET Account
+
+exports.get_account = (req, res) => {
+  let requested = req.params
+  console.log(requested)
+  res.send('you requested for: ' + requested)
+}

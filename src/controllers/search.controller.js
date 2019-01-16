@@ -1,9 +1,7 @@
-const router = require('express').Router()
 const Post = require('../model/post')
-// const SteemPost = require('../model/steemData/Post')
 const {stringify, handleErr} = require('../utils')
 
-router.post('/search/:limit?', (req, res) => {
+exports.search = (req, res) => {
   let {query} = req.body
   let limit = req.params.limit || 50
   if (query) {
@@ -34,14 +32,4 @@ router.post('/search/:limit?', (req, res) => {
   } else {
     res.status(400).send('please supply a proper query')
   }
-})
-router.post('/checktitle', (req, res) => {
-  let {username, title} = req.body
-  Post.findOne({author: username, title}).then((response) => {
-    res.send(response)
-  }).catch((e) => {
-    handleErr(e, res, 'empty result')
-  })
-})
-
-module.exports = router
+}

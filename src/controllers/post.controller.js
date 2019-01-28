@@ -8,61 +8,99 @@ const steem = require('steem')
 
 exports.create_post = (req, res) => {
   try {
-    let { username, permlink, title, body, liked, upvoteRange, jsonMetadata } = req.body
-    console.log({username, permlink, title, jsonMetadata, liked, upvoteRange})
+    let { username, permlink, title, body, jsonMetadata, payoutType } = req.body
+    
+    // Set SteemConnect Token
+
     let token = req.token
     sc2.setAccessToken(token)
-    console.log(`hello ${token}`)
-    sc2.comment('', 'steemgigs', username, permlink, title, body, jsonMetadata, (err, result) => {
-      if (err) {
-        console.log('err', err)
-        handleErr(err, res, 'Error pushing post to steem, you might have used the same title previous time', 500)
-      } else {
-        console.log({result})
-        if (liked) {
-          sc2.setAccessToken(token)
-          sc2.vote(username, username, permlink, parseInt(upvoteRange) * 100, (err, res) => {
+
+    // Default payout settings
+
+    let maxPayout = '1000000.000 SBD'
+    let steemDollarPercentage = 10000
+
+    // Adjust payout type based on user options
+
+    switch (payoutType) {
+      case '0': // decline payout
+        maxPayout = '0.000 SBD'
+        break
+      case '100%': // 100% steem power payout
+        steemDollarPercentage = 0
+        break
+      default: // 50% steem power, 50% sbd+steem
+    }
+
+    const operations = [
+      ['comment',
+        {
+          parent_author: '',
+          parent_permlink: 'steemgigs',
+          author: username,
+          permlink: permlink,
+          title: title,
+          body: body,
+          json_metadata: JSON.stringify(jsonMetadata)
+        }
+      ],
+      ['comment_options', {
+        author: username,
+        permlink: permlink,
+        max_accepted_payout: maxPayout,
+        percent_steem_dollars: steemDollarPercentage,
+        allow_votes: true,
+        allow_curation_rewards: true,
+        extensions: []
+      }]
+    ]
+
+    console.log(operations)
+
+    // Post to blockchain via SteemConnect
+
+    sc2.broadcast(
+      (err, result) => {
+        if (err) {
+          console.log('err', err)
+          handleErr(err, res, 'Error pushing post to steem, you might have used the same title previous time', 500)
+        } else {
+          console.log({result})
+          let postURL = `/steemgigs/@${username}/${permlink}`
+          console.log('result(posted to steem)::', stringify(result))
+          console.log('posted!, saving to steemggis db...')
+          console.log('result url:', postURL)
+          Post.count({ url: postURL }, (err, count) => {
+            console.log('no of exsiting url', count, 'error counting:', err)
             if (!err) {
-              console.log('post liked')
-              console.log({liked})
+              if (count > 0) {
+                Post.findOneAndUpdate({ url: postURL }, { title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type }, (err, result) => {
+                  if (!err) {
+                    res.send({
+                      permlink: permlink
+                    })
+                  } else {
+                    handleErr(err, res, 'there was an error please try again')
+                  }
+                })
+              } else {
+                let newPost = new Post({ title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type, url: postURL })
+                newPost.save(err => {
+                  if (!err) {
+                    res.send({
+                      permlink: permlink
+                    })
+                  } else {
+                    res.send('please try again')
+                  }
+                })
+              }
+            } else {
+              handleErr(err, res, 'there was an error please try again')
             }
           })
         }
-        let postURL = `/steemgigs/@${username}/${permlink}`
-        console.log('result(posted to steem)::', stringify(result))
-        console.log('posted!, saving to steemggis db...')
-        console.log('result url:', postURL)
-        Post.count({ url: postURL }, (err, count) => {
-          console.log('no of exsiting url', count, 'error counting:', err)
-          if (!err) {
-            if (count > 0) {
-              Post.findOneAndUpdate({ url: postURL }, { title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type }, (err, result) => {
-                if (!err) {
-                  res.send({
-                    permlink: permlink
-                  })
-                } else {
-                  handleErr(err, res, 'there was an error please try again')
-                }
-              })
-            } else {
-              let newPost = new Post({ title, author: username, permlink, tags: jsonMetadata.tags, price: jsonMetadata.price, currency: jsonMetadata.currency, category: jsonMetadata.category, subcategory: jsonMetadata.subcategory, type: jsonMetadata.type, url: postURL })
-              newPost.save(err => {
-                if (!err) {
-                  res.send({
-                    permlink: permlink
-                  })
-                } else {
-                  res.send('please try again')
-                }
-              })
-            }
-          } else {
-            handleErr(err, res, 'there was an error please try again')
-          }
-        })
-      }
-    })
+      })
   } catch (error) {
     handleErr(error, res, 'error posting your steemgigs')
   }

@@ -16,7 +16,7 @@ router.post('/post', checkSteemConnect, checkPermlink, postController.create_pos
 router.post('/comment', checkSteemConnect, postController.create_comment)
 router.get('/comments/:username/:permlink', postController.get_comments)
 router.get('/comment/:username/:permlink', postController.get_comment)
-router.get('/steemgig/:author/:permlink/:viewer', postController.get_post)
+router.get('/steemgig/:author/:permlink/:viewer?', postController.get_post)
 router.get('/featured', postController.get_featured)
 router.get('/usergigs/:author', postController.user_gigs)
 router.get('/steemgigs/:type?/:limit?/:page?/:last_id?', postController.get_steemGigs)

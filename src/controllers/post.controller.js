@@ -9,7 +9,6 @@ const steem = require('steem')
 exports.create_post = (req, res) => {
   try {
     let { username, permlink, title, body, jsonMetadata, payoutType } = req.body
-    
     // Set SteemConnect Token
 
     let token = req.token
@@ -60,6 +59,7 @@ exports.create_post = (req, res) => {
     // Post to blockchain via SteemConnect
 
     sc2.broadcast(
+      operations,
       (err, result) => {
         if (err) {
           console.log('err', err)

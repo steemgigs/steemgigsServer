@@ -2,12 +2,12 @@ const Post = require('../model/post')
 const {handleErr} = require('../utils')
 
 exports.search = (req, res) => {
-  const {query} = req.body
+  const {searchText, type} = req.body.query
   const limit = req.params.limit || 50
+
   let searchResult = []
   try {
-    var {searchText} = query
-    Post.find({type: 'steemgigs_post', $text: {$search: searchText.trim()}}, { score: {$meta: 'textScore'} }).select('').limit(limit).exec((err, result) => {
+    Post.find({type: type, $text: {$search: searchText.trim()}}, { score: {$meta: 'textScore'} }).select('').limit(limit).exec((err, result) => {
       if (!err) {
         searchResult = result
       } else {

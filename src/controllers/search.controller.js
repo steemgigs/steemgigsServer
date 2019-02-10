@@ -7,6 +7,7 @@ exports.search = (req, res) => {
   let searchResult = {}
   let sortMethod = {}
 
+  // Set sort method based on request
   switch (order) {
     case 'oldest':
       sortMethod = {
@@ -30,22 +31,52 @@ exports.search = (req, res) => {
       break
   }
 
-  try {
-    Post.aggregate([
+  // Define pipeline based on request provided parameters
+
+  let pipeline = []
+
+  if (searchText) {
+    pipeline = pipeline.concat(
       {$match: {$text: {$search: searchText.trim()}}},
-      {$match: {type: type, currency: currency, price: { $lte: maxPrice, $gte: minPrice }, category: category, subcategory: subcategory}},
-      {$addFields: {score: {$meta: 'textScore'}}},
-      { '$facet': {
-        'search_data': [
-          {'$sort': sortMethod},
-          {'$skip': skipCount},
-          {'$limit': limit}
-        ],
-        'post_count': [
-          { $count: 'count' }
-        ]
-      }}
-    ]).exec((err, result) => {
+      {$addFields: {score: {$meta: 'textScore'}}}
+    )
+  }
+
+  let matchOptions = {$match: {
+    currency: currency,
+    price: { $lte: maxPrice, $gte: minPrice }
+  }}
+
+  if (type) {
+    matchOptions.$match['type'] = type
+  }
+
+  if (category) {
+    matchOptions.$match['category'] = category
+  }
+
+  if (subcategory) {
+    matchOptions.$match['subcategory'] = subcategory
+  }
+
+  pipeline.push(matchOptions)
+
+  // Add facet for search result data, pagination & post count
+  pipeline.push(
+    { '$facet': {
+      'search_data': [
+        {'$sort': sortMethod},
+        {'$skip': skipCount},
+        {'$limit': limit}
+      ],
+      'post_count': [
+        { $count: 'count' }
+      ]
+    }}
+  )
+
+  try {
+    Post.aggregate(pipeline).exec((err, result) => {
       if (!err) {
         // Add results to search result object and calculate total number of pages available for client side UI
         searchResult.results = result[0].search_data

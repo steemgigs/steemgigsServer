@@ -7,10 +7,9 @@ exports.search = (req, res) => {
   let searchResult = {}
   try {
     Post.aggregate([
-      { $match: {$text: {$search: searchText.trim()}} },
-      {'$match': {type: type}},
-      {'$match': {currency: currency}},
-      { $addFields: {score: {$meta: 'textScore'}} },
+      {$match: {$text: {$search: searchText.trim()}}},
+      {$match: {type: type, currency: currency}},
+      {$addFields: {score: {$meta: 'textScore'}}},
       { '$facet': {
         'search_data': [
           {'$skip': skipCount},

@@ -3,7 +3,7 @@ const {handleErr} = require('../utils')
 
 exports.search = (req, res) => {
   const {searchText, type, currency, pageNumber, limit} = req.body.query
-  const skipCount = pageNumber * limit
+  const skipCount = limit * (pageNumber - 1)
   let searchResult = {}
   try {
     Post.aggregate([
@@ -26,7 +26,7 @@ exports.search = (req, res) => {
       if (!err) {
         // Add results to search result object and calculate total number of pages available for client side UI
         searchResult.results = result[0].search_data
-        searchResult.pages = result[0].post_count[0].count / limit
+        searchResult.pages = Math.ceil(result[0].post_count[0].count / limit)
       } else {
         handleErr(err, res, 'empty result')
       }

@@ -8,7 +8,7 @@ exports.search = (req, res) => {
   try {
     Post.aggregate([
       {$match: {$text: {$search: searchText.trim()}}},
-      {$match: {type: type, currency: currency}},
+      {$match: {type: type, currency: currency, price: { $lte: maxPrice, $gte: minPrice }}},
       {$addFields: {score: {$meta: 'textScore'}}},
       { '$facet': {
         'search_data': [

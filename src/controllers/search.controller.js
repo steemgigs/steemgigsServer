@@ -2,13 +2,13 @@ const Post = require('../model/post')
 const {handleErr} = require('../utils')
 
 exports.search = (req, res) => {
-  const {searchText, type, currency, minPrice, maxPrice, pageNumber, limit} = req.body.query
+  const {searchText, type, category, subcategory, currency, minPrice, maxPrice, pageNumber, limit} = req.body.query
   const skipCount = limit * (pageNumber - 1)
   let searchResult = {}
   try {
     Post.aggregate([
       {$match: {$text: {$search: searchText.trim()}}},
-      {$match: {type: type, currency: currency, price: { $lte: maxPrice, $gte: minPrice }}},
+      {$match: {type: type, currency: currency, price: { $lte: maxPrice, $gte: minPrice }, category: category, subcategory: subcategory}},
       {$addFields: {score: {$meta: 'textScore'}}},
       { '$facet': {
         'search_data': [

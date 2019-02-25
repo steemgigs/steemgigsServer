@@ -8,7 +8,7 @@ exports.search = (req, res) => {
   let sortMethod = {}
 
   // Set sort method based on request
-  switch (order) {
+  switch (order.toLowerCase()) {
     case 'oldest':
       sortMethod = {
         _id: 1
@@ -19,12 +19,12 @@ exports.search = (req, res) => {
         _id: -1
       }
       break
-    case 'priceLow':
+    case 'price_low':
       sortMethod = {
         price: 1
       }
       break
-    case 'priceHigh':
+    case 'price_high':
       sortMethod = {
         price: -1
       }

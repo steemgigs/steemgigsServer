@@ -1,5 +1,6 @@
 const Post = require('../model/post')
 const {handleErr} = require('../utils')
+const steem = require('steem')
 
 exports.search = (req, res) => {
   const {searchText, type, category, subcategory, currency, minPrice, maxPrice, pageNumber, order, limit} = req.body.query
@@ -80,15 +81,36 @@ exports.search = (req, res) => {
   try {
     Post.aggregate(pipeline).exec((err, result) => {
       if (!err) {
-        // Add results to search result object and calculate total number of pages available for client side UI
-        searchResult.results = result[0].search_data
-        if (result[0].post_count[0]) {
-          searchResult.pages = Math.ceil(result[0].post_count[0].count / limit)
-        }
-      } else {
-        handleErr(err, res, 'empty result')
+        const getBlockchainData = new Promise(function (resolve, reject) {
+          let combinedResults = []
+          const searchData = result[0].search_data
+          if (searchData.length !== 0) {
+            searchData.forEach(singleResult => {
+              const dbData = singleResult
+              steem.api.getContent(singleResult.author, singleResult.permlink, function (err, post) {
+                if (!err) {
+                  post.json_metadata = JSON.parse(post.json_metadata)
+                  const mergedResults = {...dbData, ...post}
+                  combinedResults.push(mergedResults)
+                  if (combinedResults.length === searchData.length) {
+                    resolve(combinedResults)
+                  }
+                }
+              })
+            })
+          } else {
+            resolve([])
+          }
+        })
+        getBlockchainData
+          .then(function (results) {
+            if (result[0].post_count[0]) {
+              searchResult.pages = Math.ceil(result[0].post_count[0].count / limit)
+            }
+            searchResult.results = results
+            res.status(200).send(searchResult)
+          })
       }
-      res.status(200).send(searchResult)
     })
   } catch (err) {
     res.status(500)

@@ -6,7 +6,6 @@ exports.search = (req, res) => {
   const skipCount = limit * (pageNumber - 1)
   let searchResult = {}
   let sortMethod = {}
-
   // Set sort method based on request
   switch (order.toLowerCase()) {
     case 'oldest':
@@ -43,7 +42,6 @@ exports.search = (req, res) => {
   }
 
   let matchOptions = {$match: {
-    currency: currency,
     price: { $lte: maxPrice, $gte: minPrice }
   }}
 
@@ -51,11 +49,15 @@ exports.search = (req, res) => {
     matchOptions.$match['type'] = type
   }
 
-  if (category) {
+  if (currency && currency.toLowerCase() !== 'any') {
+    matchOptions.$match['currency'] = currency
+  }
+
+  if (category && category.toLowerCase() !== 'any') {
     matchOptions.$match['category'] = category
   }
 
-  if (subcategory) {
+  if (subcategory && subcategory.toLowerCase() !== 'any') {
     matchOptions.$match['subcategory'] = subcategory
   }
 

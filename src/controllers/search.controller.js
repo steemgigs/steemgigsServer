@@ -80,7 +80,9 @@ exports.search = (req, res) => {
       if (!err) {
         // Add results to search result object and calculate total number of pages available for client side UI
         searchResult.results = result[0].search_data
-        searchResult.pages = Math.ceil(result[0].post_count[0].count / limit)
+        if (result[0].post_count[0]) {
+          searchResult.pages = Math.ceil(result[0].post_count[0].count / limit)
+        }
       } else {
         handleErr(err, res, 'empty result')
       }

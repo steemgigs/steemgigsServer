@@ -1,5 +1,5 @@
 const Post = require('../model/post')
-const {handleErr} = require('../utils')
+const {calcRep} = require('../utils')
 const steem = require('steem')
 
 exports.search = (req, res) => {
@@ -42,12 +42,14 @@ exports.search = (req, res) => {
     )
   }
 
-  let matchOptions = {$match: {
-    price: { $lte: maxPrice, $gte: minPrice }
-  }}
+  let matchOptions = {$match: {}}
 
   if (type) {
     matchOptions.$match['type'] = type
+  }
+
+  if (minPrice && maxPrice) {
+    matchOptions.$match['price'] = { $lte: maxPrice, $gte: minPrice }
   }
 
   if (currency && currency.toLowerCase() !== 'any') {
@@ -78,6 +80,8 @@ exports.search = (req, res) => {
     }}
   )
 
+  console.log(JSON.stringify(pipeline))
+
   try {
     Post.aggregate(pipeline).exec((err, result) => {
       if (!err) {
@@ -90,6 +94,7 @@ exports.search = (req, res) => {
               steem.api.getContent(singleResult.author, singleResult.permlink, function (err, post) {
                 if (!err) {
                   post.json_metadata = JSON.parse(post.json_metadata)
+                  post.rep = calcRep(post.author_reputation)
                   const mergedResults = {...dbData, ...post}
                   combinedResults.push(mergedResults)
                   if (combinedResults.length === searchData.length) {

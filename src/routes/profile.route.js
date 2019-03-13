@@ -20,6 +20,7 @@ router.get('/profile/:username', checkUlogCertfied, profileController.get_profil
 router.get('/userImage/:username', profileController.get_user_image)
 router.get('/:account/*.json', profileController.get_account)
 router.get('/wallet/:username', profileController.get_wallet)
+router.get('/transactions/:username', profileController.get_transactions)
 
 // Export
 

@@ -5,20 +5,31 @@ const SteemAccount = require('../model/steemData/Account')
 const axios = require('axios')
 const SSC = require('sscjs')
 const ssc = new SSC('https://api.steem-engine.com/rpc')
+const _ = require('lodash');
 
 // POST Login
 exports.login = (req, res) => {
-  let {username} = req.body
+  let {
+    username
+  } = req.body
   if (req.user === username) {
-    User.findOne({username}).exec((err, profile) => {
+    User.findOne({
+      username
+    }).exec((err, profile) => {
       if (!err) {
         if (profile) {
           // returning user
-          profile = profile.toObject({getters: true})
+          profile = profile.toObject({
+            getters: true
+          })
           if (profile.deleted) {
-            res.json({tye: 'deleted user'})
+            res.json({
+              tye: 'deleted user'
+            })
           } else if (profile.disabled) {
-            res.json({type: 'user disabled or banned'})
+            res.json({
+              type: 'user disabled or banned'
+            })
           } else {
             delete profile.deleted
             delete profile.disabled
@@ -32,10 +43,16 @@ exports.login = (req, res) => {
                 } else {
                   profile.steemgigsWitness = false
                 }
-                res.json({type: 'returning user', profile})
+                res.json({
+                  type: 'returning user',
+                  profile
+                })
               } else {
                 console.log('error connecting to steem to fetch complete userData', stringify(err))
-                res.json({type: 'returning user', profile})
+                res.json({
+                  type: 'returning user',
+                  profile
+                })
               }
             })
           }
@@ -49,7 +66,19 @@ exports.login = (req, res) => {
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              let {
+                profile_image: profilePic,
+                name,
+                about,
+                location,
+                website,
+                cover_image: coverPic,
+                facebook,
+                github,
+                instagram,
+                twitter,
+                discord
+              } = apiProfile
               let profile = {
                 username,
                 social: {
@@ -71,7 +100,9 @@ exports.login = (req, res) => {
               let newUser = new User(profile)
               newUser.save((err, newProfileData) => {
                 if (!err) {
-                  newProfileData = newProfileData.toObject({getters: true})
+                  newProfileData = newProfileData.toObject({
+                    getters: true
+                  })
                   delete newProfileData.deleted
                   delete newProfileData.disabled
                   if (author.witness_votes.indexOf('steemgigs') > -1) {
@@ -81,12 +112,18 @@ exports.login = (req, res) => {
                   }
                   newProfileData.balance = author.balance
                   newProfileData.rep = calcRep(author.reputation)
-                  res.json({type: 'new user', profile: newProfileData})
+                  res.json({
+                    type: 'new user',
+                    profile: newProfileData
+                  })
                 }
               }).catch(err => {
                 handleErr(err, res, 'error saving new user data')
               })
-              console.log({author, profile})
+              console.log({
+                author,
+                profile
+              })
             }
           })
         }
@@ -96,18 +133,37 @@ exports.login = (req, res) => {
       }
     })
   } else {
-    handleErr({error: 'unauthorized loggedIdn request'}, res, 'unauthorized loggeddIn request', 403)
+    handleErr({
+      error: 'unauthorized loggedIdn request'
+    }, res, 'unauthorized loggeddIn request', 403)
   }
 }
 
 // POST Set Profile
 exports.set_profile = (req, res) => {
-  let {username} = req.body
+  let {
+    username
+  } = req.body
   if (req.user === username) {
-    SteemAccount.findOne({account: username}).exec((err, profileData) => {
+    SteemAccount.findOne({
+      account: username
+    }).exec((err, profileData) => {
       if (!err) {
-        profileData = profileData.toObject({getters: true})
-        let {profile_image: profileImage, name, about, location, website, cover_image: coverImage, facebook, github, instagram, twitter} = profileData.json_metadata.profile
+        profileData = profileData.toObject({
+          getters: true
+        })
+        let {
+          profile_image: profileImage,
+          name,
+          about,
+          location,
+          website,
+          cover_image: coverImage,
+          facebook,
+          github,
+          instagram,
+          twitter
+        } = profileData.json_metadata.profile
         let steemgigsWitness
         if (profileData.witness_votes.indexOf('steemgigs') > -1) {
           steemgigsWitness = true
@@ -120,7 +176,11 @@ exports.set_profile = (req, res) => {
           about,
           location,
           social: {
-            website, twitter, facebook, instagram, github
+            website,
+            twitter,
+            facebook,
+            instagram,
+            github
           },
           profilePic: profileImage,
           coverPic: coverImage,
@@ -134,17 +194,37 @@ exports.set_profile = (req, res) => {
       }
     })
   } else {
-    handleErr({error: 'unauthorized loggedIn request'}, res, 'unauthorized loggedIn request', 403)
+    handleErr({
+      error: 'unauthorized loggedIn request'
+    }, res, 'unauthorized loggedIn request', 403)
   }
 }
 
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender} = req.body
-  console.log('from frontend', {test, vacation})
+  let {
+    username,
+    name,
+    expertise,
+    test,
+    about,
+    profilePic,
+    coverPic,
+    languages,
+    social,
+    vacation,
+    location,
+    gender
+  } = req.body
+  console.log('from frontend', {
+    test,
+    vacation
+  })
   if (req.user === username) {
-    User.findOne({username}, (err, userData) => {
+    User.findOne({
+      username
+    }, (err, userData) => {
       if (!err) {
         if (userData) {
           console.log('fetched userData::', stringify(userData))
@@ -186,7 +266,17 @@ exports.edit_profile = (req, res) => {
           })
         } else {
           let newUser = new User({
-            username, name, expertise, about, profilePic, coverPic, languages, social, vacation, location, gender
+            username,
+            name,
+            expertise,
+            about,
+            profilePic,
+            coverPic,
+            languages,
+            social,
+            vacation,
+            location,
+            gender
           })
           newUser.save((err, newUserData) => {
             if (!err) {
@@ -201,14 +291,18 @@ exports.edit_profile = (req, res) => {
       }
     })
   } else {
-    handleErr({error: 'unauthorized profile modification attempt'}, res, 'you can only modify your own profile details', 403)
+    handleErr({
+      error: 'unauthorized profile modification attempt'
+    }, res, 'you can only modify your own profile details', 403)
   }
 }
 
 // POST Verify User
 
 exports.verify_user = (req, res) => {
-  let {token} = req.body
+  let {
+    token
+  } = req.body
   if (token) {
     axios.get(`https://steemconnect.com/api/me?access_token=${token}`).then(response => {
       let responseData = response.data
@@ -235,17 +329,25 @@ exports.verify_user = (req, res) => {
 
 exports.get_profile = (req, res) => {
   var username = req.params.username
-  User.findOne({username}).exec((err, profile) => {
+  User.findOne({
+    username
+  }).exec((err, profile) => {
     if (!err) {
       if (profile) {
-        profile = profile.toObject({getters: true})
+        profile = profile.toObject({
+          getters: true
+        })
       } else {
         profile = {}
       }
       if (profile.deleted) {
-        res.json({tye: 'deleted user'})
+        res.json({
+          tye: 'deleted user'
+        })
       } else if (profile.disabled) {
-        res.json({type: 'user disabled or banned'})
+        res.json({
+          type: 'user disabled or banned'
+        })
       } else {
         delete profile.deleted
         delete profile.disabled
@@ -257,7 +359,19 @@ exports.get_profile = (req, res) => {
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              let {
+                profile_image: profilePic,
+                name,
+                about,
+                location,
+                website,
+                cover_image: coverPic,
+                facebook,
+                github,
+                instagram,
+                twitter,
+                discord
+              } = apiProfile
               profile = {
                 username,
                 social: {
@@ -299,9 +413,15 @@ exports.get_profile = (req, res) => {
 // GET User Image
 
 exports.get_user_image = (req, res) => {
-  let {username} = req.params
-  SteemAccount.findOne({'name': username}).exec((err, result) => {
-    result = result.toObject({getters: true})
+  let {
+    username
+  } = req.params
+  SteemAccount.findOne({
+    'name': username
+  }).exec((err, result) => {
+    result = result.toObject({
+      getters: true
+    })
     if (!err) {
       let info = {}
       info.profileImage = result.json_metadata.profile.profile_image || 'https://via.placeholder.com/100x100'
@@ -332,8 +452,7 @@ exports.get_wallet = (req, res) => {
     try {
       ssc.findOne(
         'tokens',
-        'balances',
-        {
+        'balances', {
           account: username,
           symbol: 'TEARDROPS'
         }, (err, result) => {
@@ -346,6 +465,7 @@ exports.get_wallet = (req, res) => {
     } catch (err) {
       console.log(err)
       reject(err)
+      handleErr(err, res, 'Error gathering transactions')
     }
   })
 
@@ -369,6 +489,7 @@ exports.get_wallet = (req, res) => {
     } catch (err) {
       console.log(err)
       reject(err)
+      handleErr(err, res, 'Error gathering transactions')
     }
   })
 
@@ -387,14 +508,90 @@ exports.get_wallet = (req, res) => {
     } catch (err) {
       console.log(err)
       reject(err)
+      handleErr(err, res, 'Error gathering transactions')
     }
   })
 
   Promise.all([getTearDropBalance, getAccountData, DynamicProperties])
     .then(function ([teardropBalance, generalBalances, DynamicProperties]) {
-      const balances = {...teardropBalance, ...generalBalances}
+      const balances = {
+        ...teardropBalance,
+        ...generalBalances
+      }
       balances.steem_power = steem.formatter.vestToSteem(generalBalances.vesting_shares, DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
       balances.delegated_steem_power = steem.formatter.vestToSteem((generalBalances.received_vesting_shares.split(' ')[0] - generalBalances.delegated_vesting_shares.split(' ')[0]) + ' VESTS', DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
       res.send(balances)
+    })
+}
+
+// GET Transactions
+
+exports.get_transactions = (req, res) => {
+  const username = req.params.username
+
+  // Get tranfers transactions from steem
+
+  const steemTransactions = new Promise(function (resolve, reject) {
+    try {
+      steem.api.getAccountHistory(username, -1, 1000, (err, result) => {
+        if (!err) {
+          const transfers = result.filter(tx => tx[1].op[0] === 'transfer')
+          resolve(transfers)
+        }
+      })
+    } catch (err) {
+      console.log(err)
+      reject(err)
+      handleErr(err, res, 'Error gathering transactions')
+    }
+  })
+
+  // Get TEARDROPS transactions for a user, added via http request as unable to find query in docs how to do this via npm package
+
+  const getTearDropsTransactions = new Promise(function (resolve, reject) {
+    axios.get(`https://api.steem-engine.com/accounts/history?account=${username}&limit=100&offset=0&type=user&symbol=TEARDROPS&v=1552513635377`)
+      .then(function (response) {
+        resolve(response)
+      })
+      .catch(function (err) {
+        console.log(err)
+        reject(err)
+        handleErr(err, res, 'Error gathering transactions')
+      })
+  })
+
+  Promise.all([steemTransactions, getTearDropsTransactions])
+    .then(function ([steemTransactions, tearDropsTransactions]) {
+
+      // Create object to send back details formatted for client
+      let transactions = []
+
+      // Iterate through steem transaction history and only add require transaction data to transaction object
+      steemTransactions.forEach(transaction => {
+        transactions.push({
+          details: transaction[1].op[1],
+          timestamp: transaction[1].timestamp
+        })
+      })
+
+      // Iterate through teardrops transaction history and only add require transaction data to transaction object
+      tearDropsTransactions.data.forEach(transaction => {
+        transactions.push({
+          details: {
+            from: transaction.from,
+            to: transaction.to,
+            amount: transaction.quantity,
+            memo: transaction.memo
+          },
+          timestamp: transaction.timestamp
+        })
+      })
+
+      // Sort transactions in asc order
+
+      transactions = _.sortBy(transactions, function (dateObj) {
+        return new Date(dateObj.timestamp)
+      })
+      res.send(transactions)
     })
 }

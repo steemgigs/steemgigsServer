@@ -3,6 +3,8 @@ const steem = require('steem')
 const { handleErr, stringify, calcRep } = require('../utils')
 const SteemAccount = require('../model/steemData/Account')
 const axios = require('axios')
+const SSC = require('sscjs')
+const ssc = new SSC('https://api.steem-engine.com/rpc')
 
 // POST Login
 exports.login = (req, res) => {
@@ -317,4 +319,82 @@ exports.get_account = (req, res) => {
   let requested = req.params
   console.log(requested)
   res.send('you requested for: ' + requested)
+}
+
+// GET Wallet
+
+exports.get_wallet = (req, res) => {
+  const username = req.params.username
+
+  // GET Teardrop Balance
+
+  const getTearDropBalance = new Promise(function (resolve, reject) {
+    try {
+      ssc.findOne(
+        'tokens',
+        'balances',
+        {
+          account: username,
+          symbol: 'TEARDROPS'
+        }, (err, result) => {
+          if (!err) {
+            resolve({
+              teardrop_balance: result.balance || '0'
+            })
+          }
+        })
+    } catch (err) {
+      console.log(err)
+      reject(err)
+    }
+  })
+
+  // Get Account Details
+
+  const getAccountData = new Promise(function (resolve, reject) {
+    try {
+      steem.api.getAccounts([username], function (err, result) {
+        if (!err) {
+          resolve({
+            steem_balance: result[0].balance,
+            sbd_balance: result[0].sbd_balance,
+            steem_savings: result[0].savings_balance,
+            sbd_savings: result[0].savings_sbd_balance,
+            vesting_shares: result[0].vesting_shares,
+            delegated_vesting_shares: result[0].delegated_vesting_shares,
+            received_vesting_shares: result[0].received_vesting_shares
+          })
+        }
+      })
+    } catch (err) {
+      console.log(err)
+      reject(err)
+    }
+  })
+
+  // GET Dynamic Properties
+
+  const DynamicProperties = new Promise(function (resolve, reject) {
+    try {
+      steem.api.getDynamicGlobalProperties(function (err, result) {
+        if (!err) {
+          resolve({
+            totalVestingShare: result.total_vesting_shares,
+            totalVestingFund: result.total_vesting_fund_steem
+          })
+        }
+      })
+    } catch (err) {
+      console.log(err)
+      reject(err)
+    }
+  })
+
+  Promise.all([getTearDropBalance, getAccountData, DynamicProperties])
+    .then(function ([teardropBalance, generalBalances, DynamicProperties]) {
+      const balances = {...teardropBalance, ...generalBalances}
+      balances.steem_power = steem.formatter.vestToSteem(generalBalances.vesting_shares, DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
+      balances.delegated_steem_power = steem.formatter.vestToSteem((generalBalances.received_vesting_shares.split(' ')[0] - generalBalances.delegated_vesting_shares.split(' ')[0]) + ' VESTS', DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
+      res.send(balances)
+    })
 }

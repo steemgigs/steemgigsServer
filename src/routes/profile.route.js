@@ -19,6 +19,7 @@ router.post('/verify', profileController.verify_user)
 router.get('/profile/:username', checkUlogCertfied, profileController.get_profile)
 router.get('/userImage/:username', profileController.get_user_image)
 router.get('/:account/*.json', profileController.get_account)
+router.get('/wallet/:username', profileController.get_wallet)
 
 // Export
 

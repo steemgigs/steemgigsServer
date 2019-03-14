@@ -5,7 +5,7 @@ const SteemAccount = require('../model/steemData/Account')
 const axios = require('axios')
 const SSC = require('sscjs')
 const ssc = new SSC('https://api.steem-engine.com/rpc')
-const _ = require('lodash');
+const _ = require('lodash')
 
 // POST Login
 exports.login = (req, res) => {
@@ -446,8 +446,7 @@ exports.get_account = (req, res) => {
 exports.get_wallet = (req, res) => {
   const username = req.params.username
 
-  // GET Teardrop Balance
-
+  // Get Teardrop Balance using steemeng
   const getTearDropBalance = new Promise(function (resolve, reject) {
     try {
       ssc.findOne(
@@ -458,7 +457,11 @@ exports.get_wallet = (req, res) => {
         }, (err, result) => {
           if (!err) {
             resolve({
-              teardrop_balance: result.balance || '0'
+              teardrop_balance: result.balance
+            })
+          } else {
+            resolve({
+              teardrop_balance: '0 TEARDROPS'
             })
           }
         })
@@ -470,7 +473,6 @@ exports.get_wallet = (req, res) => {
   })
 
   // Get Account Details
-
   const getAccountData = new Promise(function (resolve, reject) {
     try {
       steem.api.getAccounts([username], function (err, result) {
@@ -493,8 +495,7 @@ exports.get_wallet = (req, res) => {
     }
   })
 
-  // GET Dynamic Properties
-
+  // Get dynamic Properties in order calculate steem power totals
   const DynamicProperties = new Promise(function (resolve, reject) {
     try {
       steem.api.getDynamicGlobalProperties(function (err, result) {
@@ -518,7 +519,7 @@ exports.get_wallet = (req, res) => {
         ...teardropBalance,
         ...generalBalances
       }
-      balances.steem_power = steem.formatter.vestToSteem(generalBalances.vesting_shares, DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
+      balances.steem_power = steem.formatter.vestToSteem(generalBalances.vesting_shares, DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund).toFixed(3)
       balances.delegated_steem_power = steem.formatter.vestToSteem((generalBalances.received_vesting_shares.split(' ')[0] - generalBalances.delegated_vesting_shares.split(' ')[0]) + ' VESTS', DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
       res.send(balances)
     })
@@ -530,7 +531,6 @@ exports.get_transactions = (req, res) => {
   const username = req.params.username
 
   // Get tranfers transactions from steem
-
   const steemTransactions = new Promise(function (resolve, reject) {
     try {
       steem.api.getAccountHistory(username, -1, 1000, (err, result) => {
@@ -547,7 +547,6 @@ exports.get_transactions = (req, res) => {
   })
 
   // Get TEARDROPS transactions for a user, added via http request as unable to find query in docs how to do this via npm package
-
   const getTearDropsTransactions = new Promise(function (resolve, reject) {
     axios.get(`https://api.steem-engine.com/accounts/history?account=${username}&limit=100&offset=0&type=user&symbol=TEARDROPS&v=1552513635377`)
       .then(function (response) {
@@ -562,7 +561,6 @@ exports.get_transactions = (req, res) => {
 
   Promise.all([steemTransactions, getTearDropsTransactions])
     .then(function ([steemTransactions, tearDropsTransactions]) {
-
       // Create object to send back details formatted for client
       let transactions = []
 
@@ -580,18 +578,22 @@ exports.get_transactions = (req, res) => {
           details: {
             from: transaction.from,
             to: transaction.to,
-            amount: transaction.quantity,
+            amount: transaction.quantity + ' TEARDROPS',
             memo: transaction.memo
           },
           timestamp: transaction.timestamp
         })
       })
 
-      // Sort transactions in asc order
-
+      // Sort transactions using lodash (sorted asc by default)
       transactions = _.sortBy(transactions, function (dateObj) {
         return new Date(dateObj.timestamp)
       })
-      res.send(transactions)
+
+      // Send to client in descending order
+      res.send(transactions.reverse())
+    }).catch(function (err) {
+      console.log(err)
+      handleErr(err, res, 'Error gathering transactions')
     })
 }

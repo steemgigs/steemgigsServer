@@ -561,7 +561,7 @@ exports.get_transactions = (req, res) => {
 
   Promise.all([steemTransactions, getTearDropsTransactions])
     .then(function ([steemTransactions, tearDropsTransactions]) {
-      // Create object to send back details formatted for client
+      // Create array to send back details formatted for client
       let transactions = []
 
       // Iterate through steem transaction history and only add require transaction data to transaction object

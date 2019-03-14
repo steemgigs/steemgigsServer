@@ -522,6 +522,9 @@ exports.get_wallet = (req, res) => {
       balances.steem_power = steem.formatter.vestToSteem(generalBalances.vesting_shares, DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund).toFixed(3)
       balances.delegated_steem_power = steem.formatter.vestToSteem((generalBalances.received_vesting_shares.split(' ')[0] - generalBalances.delegated_vesting_shares.split(' ')[0]) + ' VESTS', DynamicProperties.totalVestingShare, DynamicProperties.totalVestingFund)
       res.send(balances)
+    }).catch(function (err) {
+      console.log(err)
+      handleErr(err, res, 'Error gathering transactions')
     })
 }
 

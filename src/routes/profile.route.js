@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const validate = require('express-validation')
-const { editProfile } = require('../validation/profile.validation')
+const { editProfile } = require('../validation/entries.validation'); 
 
 // Middleware
 

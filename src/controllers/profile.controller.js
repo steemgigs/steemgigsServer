@@ -139,33 +139,68 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, about, profilePic, coverPic, languages, social, vacation, location, gender, skills, hobbies, learning, helpWith} = req.body
-  User.findOne({username}, (err, profile) => {
-    if (!err) {
-      profile.name = name
-      profile.expertise = expertise
-      profile.about = about
-      profile.profilePic = profilePic
-      profile.coverPic = coverPic
-      profile.languages = languages
-      profile.social = social
-      profile.vacation = vacation
-      profile.location = location
-      profile.gender = gender
-      profile.skills = skills
-      profile.hobbies = hobbies
-      profile.learning = learning
-      profile.help_with = helpWith
-
-      profile.save((err, result) => {
-        if (!err) {
-          res.send(result)
+  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender} = req.body
+  console.log('from frontend', {test, vacation})
+  if (req.user === username) {
+    User.findOne({username}, (err, userData) => {
+      if (!err) {
+        if (userData) {
+          console.log('fetched userData::', stringify(userData))
+          if (name) {
+            userData.name = name
+          }
+          if (expertise) {
+            userData.expertise = expertise
+          }
+          if (about) {
+            userData.about = about
+          }
+          if (profilePic) {
+            userData.profilePic = profilePic
+          }
+          if (coverPic) {
+            userData.coverPic = coverPic
+          }
+          if (languages) {
+            userData.languages = languages
+          }
+          if (social) {
+            userData.social = social
+          }
+          if (location) {
+            userData.location = location
+          }
+          if (gender) {
+            userData.gender = gender
+          }
+          userData.vacation = vacation
+          userData.save((err, modifiedUserData) => {
+            if (!err) {
+              console.log('modified user Data::', stringify(modifiedUserData))
+              res.send(modifiedUserData)
+            } else {
+              handleErr(err, res, 'there was an error modifying your profile')
+            }
+          })
         } else {
-          handleErr(err, res, 'there was an error modifying your profile')
+          let newUser = new User({
+            username, name, expertise, about, profilePic, coverPic, languages, social, vacation, location, gender
+          })
+          newUser.save((err, newUserData) => {
+            if (!err) {
+              res.send(newUserData)
+            } else {
+              handleErr(err, res, 'error saving new user data')
+            }
+          })
         }
-      })
-    }
-  })
+      } else {
+        handleErr(err, res, 'we couldn\'t locate this user in our records')
+      }
+    })
+  } else {
+    handleErr({error: 'unauthorized profile modification attempt'}, res, 'you can only modify your own profile details', 403)
+  }
 }
 
 // POST Verify User

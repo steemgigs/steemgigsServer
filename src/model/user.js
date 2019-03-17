@@ -69,26 +69,16 @@ let userSchema = new Schema({
   last_login: {
     type: Number,
     required: false
-  },
-  skills: {
-    type: Array,
-    required: false
-  },
-  interest: {
-    type: Array,
-    required: false
-  },
-  learning: {
-    type: Array,
-    required: false
-  },
-  helpWith: {
-    type: Array,
-    required: false
   }
 }, {runSettersOnQuery: true})
 
 userSchema.pre('save', function (next) {
+  // let hash = crypto
+  //   .createHash('md5')
+  //   .update(this.email)
+  //   .digest('hex')
+  // this.profilePic = `https://www.gravatar.com/avatar/${hash}`
+
   var currentDate = new Date().getTime()
   this.updatedAt = currentDate
   if (!this.createdOn) {

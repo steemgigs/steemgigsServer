@@ -156,7 +156,6 @@ exports.edit_profile = (req, res) => {
       profile.hobbies = hobbies
       profile.learning = learning
       profile.help_with = helpWith
-
       profile.save((err, result) => {
         if (!err) {
           res.send(result)
@@ -206,7 +205,7 @@ exports.get_profile = (req, res) => {
         profile = {}
       }
       if (profile.deleted) {
-        res.json({tye: 'deleted user'})
+        res.json({type: 'deleted user'})
       } else if (profile.disabled) {
         res.json({type: 'user disabled or banned'})
       } else {
@@ -220,7 +219,7 @@ exports.get_profile = (req, res) => {
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord, vacation, gender, skills, hobbies, learning, helpWith} = apiProfile
               profile = {
                 username,
                 social: {
@@ -239,6 +238,12 @@ exports.get_profile = (req, res) => {
               profile.location = location || ''
               profile.coverPic = coverPic || ''
               profile.name = name || ''
+              profile.gender = gender || ''
+              profile.skills = skills || []
+              profile.vacation = vacation || false
+              profile.hobbies = hobbies || []
+              profile.learning = learning || []
+              profile.helpWith = helpWith || []
             }
             profile.balance = author.balance
             profile.rep = calcRep(author.reputation)

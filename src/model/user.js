@@ -82,7 +82,7 @@ let userSchema = new Schema({
     type: Array,
     required: false
   },
-  helpWith: {
+  help_with: {
     type: Array,
     required: false
   }

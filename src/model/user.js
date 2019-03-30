@@ -66,6 +66,26 @@ let userSchema = new Schema({
     type: Number,
     required: false
   },
+  socialReach: {
+    type: String,
+    required: false,
+  },
+  skillsAndHobbies: {
+    type: Array,
+    required: false,
+  },
+  portfolio: {
+    type: Object,
+    required: false,
+  },
+  learning: {
+    type: Array,
+    required: false,
+  },
+  helpWith: {
+    type: Array,
+    required: false,
+  },
   last_login: {
     type: Number,
     required: false

@@ -139,7 +139,7 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning} = req.body
+  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach} = req.body
   if (req.user === username) {
     User.findOne({username}, (err, userData) => {
       if (!err) {
@@ -149,6 +149,9 @@ exports.edit_profile = (req, res) => {
           }
           if (skillsAndHobbies) {
             userData.skillsAndHobbies = skillsAndHobbies
+          }
+          if (socialReach) {
+            userData.socialReach = socialReach
           }
           if (learning) {
             userData.learning = learning
@@ -262,6 +265,7 @@ exports.get_profile = (req, res) => {
               profile = {
                 username,
                 skillsAndHobbies: skillsAndHobbies || [],
+                socialReach: socialReach || '',
                 learning: learning || [],
                 social: {
                   website: website || '',

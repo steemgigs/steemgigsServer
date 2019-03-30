@@ -67,7 +67,7 @@ let userSchema = new Schema({
     required: false
   },
   socialReach: {
-    type: Number,
+    type: String,
     required: false,
   },
   skillsAndHobbies: {

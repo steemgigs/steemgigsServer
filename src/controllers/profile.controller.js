@@ -139,15 +139,16 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender} = req.body
-  console.log('from frontend', {test, vacation})
+  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies} = req.body
   if (req.user === username) {
     User.findOne({username}, (err, userData) => {
       if (!err) {
         if (userData) {
-          console.log('fetched userData::', stringify(userData))
           if (name) {
             userData.name = name
+          }
+          if (skillsAndHobbies) {
+            userData.skillsAndHobbies = skillsAndHobbies
           }
           if (expertise) {
             userData.expertise = expertise
@@ -176,7 +177,6 @@ exports.edit_profile = (req, res) => {
           userData.vacation = vacation
           userData.save((err, modifiedUserData) => {
             if (!err) {
-              console.log('modified user Data::', stringify(modifiedUserData))
               res.send(modifiedUserData)
             } else {
               handleErr(err, res, 'there was an error modifying your profile')
@@ -255,9 +255,10 @@ exports.get_profile = (req, res) => {
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord, skillsAndHobbies} = apiProfile
               profile = {
                 username,
+                skillsAndHobbies: skillsAndHobbies || [],
                 social: {
                   website: website || '',
                   facebook: facebook || '',

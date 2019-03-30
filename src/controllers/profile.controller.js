@@ -139,7 +139,7 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach, helpWith} = req.body
+  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach, helpWith, portfolio} = req.body
   if (req.user === username) {
     User.findOne({username}, (err, userData) => {
       if (!err) {
@@ -149,6 +149,9 @@ exports.edit_profile = (req, res) => {
           }
           if (skillsAndHobbies) {
             userData.skillsAndHobbies = skillsAndHobbies
+          }
+          if (portfolio) {
+            userData.portfolio = portfolio
           }
           if (helpWith) {
             userData.helpWith = helpWith
@@ -219,7 +222,6 @@ exports.verify_user = (req, res) => {
   if (token) {
     axios.get(`https://steemconnect.com/api/me?access_token=${token}`).then(response => {
       let responseData = response.data
-      // console.log((responseData))
       res.send(responseData)
     }).catch(err => {
       if (err.response) {
@@ -259,7 +261,7 @@ exports.get_profile = (req, res) => {
         steem.api.getAccounts([username], function (err, authorArray) {
           let author = authorArray[0]
           if (!err) {
-            if (Object.keys(profile).length < 1) {
+            if (Object.keys(profile).length === 0) {
               let apiProfile = {}
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
@@ -294,6 +296,12 @@ exports.get_profile = (req, res) => {
               profile.steemgigsWitness = true
             } else {
               profile.steemgigsWitness = false
+            }
+            if (!profile.portfolio) {
+              profile.portfolio = {
+                description: '',
+                url: ''
+              }
             }
             profile.certifiedUloggerStatus = res.locals.certifiedUloggerStatus || false
             res.json(profile)

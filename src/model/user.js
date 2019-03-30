@@ -75,7 +75,7 @@ let userSchema = new Schema({
     required: false,
   },
   portfolio: {
-    type: Array,
+    type: Object,
     required: false,
   },
   learning: {

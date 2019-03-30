@@ -139,15 +139,28 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender} = req.body
-  console.log('from frontend', {test, vacation})
+  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach, helpWith, portfolio} = req.body
   if (req.user === username) {
     User.findOne({username}, (err, userData) => {
       if (!err) {
         if (userData) {
-          console.log('fetched userData::', stringify(userData))
           if (name) {
             userData.name = name
+          }
+          if (skillsAndHobbies) {
+            userData.skillsAndHobbies = skillsAndHobbies
+          }
+          if (portfolio) {
+            userData.portfolio = portfolio
+          }
+          if (helpWith) {
+            userData.helpWith = helpWith
+          }
+          if (socialReach) {
+            userData.socialReach = socialReach
+          }
+          if (learning) {
+            userData.learning = learning
           }
           if (expertise) {
             userData.expertise = expertise
@@ -176,7 +189,6 @@ exports.edit_profile = (req, res) => {
           userData.vacation = vacation
           userData.save((err, modifiedUserData) => {
             if (!err) {
-              console.log('modified user Data::', stringify(modifiedUserData))
               res.send(modifiedUserData)
             } else {
               handleErr(err, res, 'there was an error modifying your profile')
@@ -210,7 +222,6 @@ exports.verify_user = (req, res) => {
   if (token) {
     axios.get(`https://steemconnect.com/api/me?access_token=${token}`).then(response => {
       let responseData = response.data
-      // console.log((responseData))
       res.send(responseData)
     }).catch(err => {
       if (err.response) {
@@ -250,14 +261,18 @@ exports.get_profile = (req, res) => {
         steem.api.getAccounts([username], function (err, authorArray) {
           let author = authorArray[0]
           if (!err) {
-            if (Object.keys(profile).length < 1) {
+            if (Object.keys(profile).length === 0) {
               let apiProfile = {}
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord} = apiProfile
+              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord, skillsAndHobbies, helpWith} = apiProfile
               profile = {
                 username,
+                skillsAndHobbies: skillsAndHobbies || [],
+                helpWith: helpWith || [],
+                socialReach: socialReach || '',
+                learning: learning || [],
                 social: {
                   website: website || '',
                   facebook: facebook || '',
@@ -281,6 +296,12 @@ exports.get_profile = (req, res) => {
               profile.steemgigsWitness = true
             } else {
               profile.steemgigsWitness = false
+            }
+            if (!profile.portfolio) {
+              profile.portfolio = {
+                description: '',
+                url: ''
+              }
             }
             profile.certifiedUloggerStatus = res.locals.certifiedUloggerStatus || false
             res.json(profile)

@@ -445,7 +445,9 @@ exports.get_account = (req, res) => {
 
 exports.get_wallet = (req, res) => {
   const username = req.params.username
+  const isValidUsername = steem.utils.validateAccountName(username);
 
+  if (isValidUsername) {
   // Get Teardrop Balance using steemeng
   const getTearDropBalance = new Promise(function (resolve, reject) {
     try {
@@ -456,6 +458,7 @@ exports.get_wallet = (req, res) => {
           symbol: 'TEARDROPS'
         }, (err, result) => {
           if (!err) {
+            if (result.balance)
             resolve({
               teardrop_balance: parseInt(result.balance, 10).toFixed(3)
             })
@@ -526,6 +529,10 @@ exports.get_wallet = (req, res) => {
       console.log(err)
       handleErr(err, res, 'Error gathering transactions')
     })
+
+  } else {
+    res.send([])
+  }
 }
 
 // GET Transactions

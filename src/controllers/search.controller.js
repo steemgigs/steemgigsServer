@@ -80,8 +80,6 @@ exports.search = (req, res) => {
     }}
   )
 
-  console.log(JSON.stringify(pipeline))
-
   try {
     Post.aggregate(pipeline).exec((err, result) => {
       if (!err) {

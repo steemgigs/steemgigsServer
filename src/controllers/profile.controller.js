@@ -537,7 +537,7 @@ exports.get_transactions = (req, res) => {
   // Get tranfers transactions from steem
   const steemTransactions = new Promise(function (resolve, reject) {
     try {
-      steem.api.getAccountHistory(username, -1, 1000, (err, result) => {
+      steem.api.getAccountHistory(username, -1, 3000, (err, result) => {
         if (!err) {
           const transfers = result.filter(tx => tx[1].op[0] === 'transfer')
           resolve(transfers)

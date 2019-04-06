@@ -3,7 +3,6 @@ const steem = require('steem')
 const checkUsername = async (req, res, next) => {
     try {
         steem.api.getAccounts([req.params.username], function(err, result) {
-            console.log(result)
             if (result.length !== 0) {
                 next()
             } else {

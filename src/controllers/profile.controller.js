@@ -457,11 +457,11 @@ exports.get_wallet = (req, res) => {
         }, (err, result) => {
           if (!err) {
             resolve({
-              teardrop_balance: result.balance
+              teardrop_balance: parseInt(result.balance, 10).toFixed(3)
             })
           } else {
             resolve({
-              teardrop_balance: '0 TEARDROPS'
+              teardrop_balance: 0
             })
           }
         })

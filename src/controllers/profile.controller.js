@@ -449,14 +449,15 @@ exports.get_wallet = (req, res) => {
           symbol: 'TEARDROPS'
         }, (err, result) => {
           if (!err) {
-            if (result.balance)
-            resolve({
-              teardrop_balance: parseInt(result.balance, 10).toFixed(3)
-            })
-          } else {
-            resolve({
-              teardrop_balance: 0
-            })
+            if (result.balance) {
+              resolve({
+                teardrop_balance: parseInt(result.balance, 10).toFixed(3)
+              })
+            } else {
+              resolve({
+                teardrop_balance: 0
+              })
+            }
           }
         })
     } catch (err) {

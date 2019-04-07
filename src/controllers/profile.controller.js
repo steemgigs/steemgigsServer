@@ -203,7 +203,7 @@ exports.set_profile = (req, res) => {
 // Edit Profile
 
 exports.edit_profile = (req, res) => {
-  let {username, name, expertise, test, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach, helpWith, portfolio} = req.body
+  let {username, name, expertise, about, profilePic, coverPic, languages, social, vacation, location, gender, skillsAndHobbies, learning, socialReach, helpWith, portfolio} = req.body
   if (req.user === username) {
     User.findOne({
       username
@@ -354,7 +354,7 @@ exports.get_profile = (req, res) => {
               if (JSON.parse(author.json_metadata).profile) {
                 apiProfile = JSON.parse(author.json_metadata).profile
               }
-              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord, skillsAndHobbies, helpWith} = apiProfile
+              let {profile_image: profilePic, name, about, location, website, cover_image: coverPic, facebook, github, instagram, twitter, discord, skillsAndHobbies, helpWith, socialReach, learning} = apiProfile
               profile = {
                 username,
                 skillsAndHobbies: skillsAndHobbies || [],

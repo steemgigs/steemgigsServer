@@ -5,6 +5,7 @@ const router = express.Router()
 
 const checkSteemConnect = require('../middleware/check-steemconnect')
 const checkUlogCertfied = require('../middleware/certified-ulogger')
+const checkUsername = require('../middleware/check-username')
 
 // Controller
 
@@ -19,6 +20,8 @@ router.post('/verify', profileController.verify_user)
 router.get('/profile/:username', checkUlogCertfied, profileController.get_profile)
 router.get('/userImage/:username', profileController.get_user_image)
 router.get('/:account/*.json', profileController.get_account)
+router.get('/wallet/:username', checkUsername, profileController.get_wallet)
+router.get('/transactions/:username', checkUsername, profileController.get_transactions)
 
 // Export
 

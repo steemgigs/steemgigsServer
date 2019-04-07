@@ -4,7 +4,7 @@
   "description": "Steemgigs API Server",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index",
+    "start": "nodemon src/index.js",
     "startw": "nodemon src/index.js --exec 'npm run lint && node'",
     "startW": "nodemon src/index.js --exec 'npm run lint && npm run startRP'",
     "startP": "pm2 start src/index.js -i max --name \"SteemGigsServer\"",
@@ -46,12 +46,14 @@
     "helmet": "^3.9.0",
     "joi": "^13.0.2",
     "jsonwebtoken": "^8.1.0",
+    "lodash": "^4.17.11",
     "mongoose": "^4.13.7",
     "mongoose-multi": "0.0.18",
     "morgan": "^1.9.0",
     "redis": "^2.8.0",
     "sc2-sdk": "^1.0.2",
-    "steemconnect": "^2.0.1",
-    "steem": "^0.7.1"
+    "sscjs": "0.0.7",
+    "steem": "^0.7.1",
+    "steemconnect": "^2.0.1"
   }
 }
